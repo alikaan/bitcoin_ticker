@@ -2,6 +2,7 @@ import 'package:bitcoin_ticker/coin_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'coin_data.dart';
+import 'components/crypto_card.dart';
 import 'dart:io' show Platform;
 
 class PriceScreen extends StatefulWidget {
@@ -10,8 +11,13 @@ class PriceScreen extends StatefulWidget {
 }
 
 class _PriceScreenState extends State<PriceScreen> {
-  String selectedCurrency = 'USD';
-  String bitcoinValueInUSD = '?';
+  String selectedCurrency = currenciesList[0];
+  String cryptoRate = '?';
+  Map<String, String> coinValues = {
+    '${cryptoList[0]}': '?',
+    '${cryptoList[1]}': '?',
+    '${cryptoList[2]}': '?'
+  };
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -31,6 +37,7 @@ class _PriceScreenState extends State<PriceScreen> {
       onChanged: (value) {
         setState(() {
           selectedCurrency = value!;
+          getData();
         });
       },
     );
@@ -48,17 +55,35 @@ class _PriceScreenState extends State<PriceScreen> {
       backgroundColor: Colors.lightBlue,
       itemExtent: 32.0,
       onSelectedItemChanged: (selectedIndex) {
-        print(selectedIndex);
+        setState(() {
+          selectedCurrency = currenciesList[selectedIndex];
+          getData();
+        });
       },
       children: pickerItems,
     );
   }
 
+  void getData() async {
+    try {
+      for(String cyrpto in cryptoList){
+        print('cyrpto: $cyrpto');
+        var coinData = CoinData(cyrpto, selectedCurrency);
+        var val = await coinData.getCoinData();
+        print('val: $val');
+        setState(() {
+          coinValues[cyrpto] = val.toStringAsFixed(0);
+        });
+      }
+    } catch (e) {
+      print('ex: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    var coinData = CoinData('BTC', 'USD');
-    coinData.getCoinData();
+    getData();
   }
   @override
   Widget build(BuildContext context) {
@@ -70,26 +95,14 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = ? USD',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CryptoCard(coinValues['BTC']!, selectedCurrency, 'BTC'),
+              CryptoCard(coinValues['ETH']!, selectedCurrency, 'ETH'),
+              CryptoCard(coinValues['LTC']!, selectedCurrency, 'LTC'),
+            ],
           ),
           Container(
               height: 150.0,

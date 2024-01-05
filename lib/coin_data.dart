@@ -39,15 +39,13 @@ class CoinData {
 
   CoinData(this.crypto, this.currency);
 
-  void getCoinData()async {
+  Future getCoinData()async {
     var url = '$coinApiUrl/$crypto/$currency/apikey-$apiKey';
     print(url);
     NetworkHelper networkHelper = NetworkHelper(url);
-
     var data = await networkHelper.getData();
-    print(data);
-
+    print('data: $data');
     var lastPrice = data['rate'];
-    print(lastPrice);
+    return lastPrice;
   }
 }
